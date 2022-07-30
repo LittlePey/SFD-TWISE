@@ -1,3 +1,38 @@
+
+# Generate Pseudo Point Clouds for KITTI Object Detection DataSet with TWISE.
+## 1. Generate Sparse Depth Map
+Go to SFD project, and run
+```
+cd SFD
+python lidar_to_depth.py
+```
+
+## 2. Prepare Data
+Link the kitti_sfd_seguv_twise folder mentioned in [SFD](https://github.com/LittlePey/SFD) to 'Data' directory. For example:
+```
+$ ln  -s  /xxx/kitti_sfd_seguv_twise  Data/kitti_sfd_seguv_twise
+```
+
+## 3. Generate Dense Depth Map
+To predict dense depth map for training set, run
+```
+cd TWISE/Codes
+python evaluate.py --data-folder-save ../Data/kitti_sfd_seguv_twise/training/depth_dense_twise/  --test
+```
+
+To predict dense depth map for testing set, comment line 78~86 and uncomment line 88~96 in Codes/dataloaders/kitti_loader.py, then run
+```
+cd TWISE/Codes
+python evaluate.py --data-folder-save ../Data/kitti_sfd_seguv_twise/testing/depth_dense_twise/   --test
+```
+
+## 4. Generate Pseudo Point Clouds
+Go to SFD project, and run
+```
+cd SFD
+python depth_to_lidar.py
+```
+
 # Twin-Surface-Extrapolation-TWISE-
 Code for CVPR 2021 Submission of our paper 'Depth Completion with Twin Surface Extrapolation at Occlusion Boundaries' available at
 [paper.](https://arxiv.org/abs/2104.02253)

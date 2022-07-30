@@ -1,7 +1,7 @@
 import os
-if not ("DISPLAY" in os.environ):
-    import matplotlib as mpl
-    mpl.use('Agg')
+# if not ("DISPLAY" in os.environ):
+#     import matplotlib as mpl
+#     mpl.use('Agg')
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
@@ -54,11 +54,16 @@ def save_depth_as_uint16png(img, filename):
     img = (img * 256).astype('uint16')
     cv2.imwrite(filename, img)
 
+def save_depth_as_uint16png_upload(img, filename):
+    img_buffer = img.tobytes()
+    imgsave = Image.new("I", img.T.shape)
+    imgsave.frombytes(img_buffer, 'raw', "I;16")
+    imgsave.save(filename)
 
-if ("DISPLAY" in os.environ):
-    f, axarr = plt.subplots(4, 1)
-    plt.tight_layout()
-    plt.ion()
+# if ("DISPLAY" in os.environ):
+#     f, axarr = plt.subplots(4, 1)
+#     plt.tight_layout()
+#     plt.ion()
 
 
 def display_warping(rgb_tgt, pred_tgt, warped):

@@ -75,15 +75,25 @@ def get_paths_and_transform(split, args, trainvalsplit = 0.9):
             "depth_selection/val_selection_cropped/image/*.png"))
 
     elif split == "test_completion":
-        transform = test_transform
+        transform = test_transform_
         glob_d = glob.glob(os.path.join(
             args.data_folder, 'Data',
-            "depth_selection/test_depth_completion_anonymous/velodyne_raw/*.png"
+            "kitti_sfd_seguv_twise/training/depth_sparse/*.png"
         ))
         glob_gt = None  #"test_depth_completion_anonymous/"
         glob_rgb = glob.glob(os.path.join(
             args.data_folder,'Data',
-            "depth_selection/test_depth_completion_anonymous/image/*.png"))    
+            "kitti_sfd_seguv_twise/training/image_2/*.png"))
+
+        # transform = test_transform_
+        # glob_d = glob.glob(os.path.join(
+        #     args.data_folder, 'Data',
+        #     "kitti_sfd_seguv_twise/testing/depth_sparse/*.png"
+        # ))
+        # glob_gt = None  #"test_depth_completion_anonymous/"
+        # glob_rgb = glob.glob(os.path.join(
+        #     args.data_folder,'Data',
+        #     "kitti_sfd_seguv_twise/testing/image_2/*.png"))
     else:
         raise ValueError("Unrecognized split " + str(split))
 
@@ -113,7 +123,9 @@ def get_paths_and_transform(split, args, trainvalsplit = 0.9):
         raise (RuntimeError("Requested rgb images but none was found"))
     if len(paths_rgb) == 0 and args.use_g:
         raise (RuntimeError("Requested gray images but no rgb was found"))
-    if len(paths_rgb) != len(paths_d) or len(paths_rgb) != len(paths_gt):
+    if len(paths_rgb) != len(paths_d):
+        print(paths_rgb)
+        print(paths_d)
         raise (RuntimeError("Produced different sizes for datasets"))
     totlen = len(paths_rgb)
     if split == 'train':
@@ -234,16 +246,8 @@ def val_transform(rgb, sparse, target, args):
 
 
 def test_transform(rgb, sparse, target, args):
-    maxcrop_h, maxcrop_w = oheight, cwidth
-    y_b = 0
-    y_t = y_b + maxcrop_h
-    h = oheight
-    w = owidth
-    x_l = np.random.randint(w - maxcrop_w + 1, size = ())
-    x_r = x_l + maxcrop_w
-
     transform = transforms.Compose([
-        transforms.BottomCrop((oheight, owidth)),
+        transforms.BottomCrop((256, 1216)),
         #transforms.RandomCrop([x_l, x_r, y_b, y_t])
         ])
     if rgb is not None:
@@ -252,6 +256,20 @@ def test_transform(rgb, sparse, target, args):
         sparse = transform(sparse)
     if target is not None:
         target = transform(target)
+   
+    return rgb, sparse, target, 
+
+def test_transform_(rgb, sparse, target, args):
+    h, w, _ = rgb.shape
+    th, tw  = oheight, owidth
+    i = h - th
+    j = int(round((w - tw) / 2.))
+    if rgb is not None:
+        rgb = rgb[i:i + th, j:j+tw]
+    if sparse is not None:
+        sparse = sparse[i:i + th, j:j+tw]
+    if target is not None:
+        target = target[i:i + th, j:j+tw]
    
     return rgb, sparse, target, 
 
@@ -306,5 +324,3 @@ class KittiDepth(data.Dataset):
 
     def __len__(self):
         return len(self.paths['gt'])
-
-

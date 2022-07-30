@@ -1,4 +1,7 @@
-/Codes/__pycache__
+Codes/__pycache__
+Codes/dataloader/__pycache__
 #Data/depth_selection/
-
-
+*.pyc
+*/*.pyc
+*/*/*.pyc
+Data/*

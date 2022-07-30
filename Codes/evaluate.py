@@ -6,19 +6,18 @@ import imageio
 import matplotlib.pyplot as plt
 import scipy.io as io
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 import torch
 import torch.nn.parallel
 import torch.nn.functional as F
 import torch.optim
 import torch.utils.data
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 
 from dataloaders.kitti_loader import load_calib, oheight, owidth, input_options, KittiDepth
 from model import *
 from metrics import AverageMeter, Result, accum_errorstat
 import helper
-
+import vis_utils
 from utils import *
 
 params = {'depth_maxrange': 80.0,                                                
@@ -34,10 +33,20 @@ parser.add_argument('-w',
                     help='number of data loading workers (default: 4)')
 
 parser.add_argument('--data-folder',
-                    default='/home/imransai/Documents/Depth_SuperResolution/TWISE_Public/TWISE',
+                    default='..',
                     type=str,
                     metavar='PATH',
                     help='data folder (default: none)')
+
+parser.add_argument('--test', action="store_true", default=False,
+                    help='save result kitti test dataset for submission')
+
+parser.add_argument('--data-folder-save',
+                    default='..',
+                    type=str,
+                    metavar='PATH',
+                    help='data folder test results(default: none)')
+
 parser.add_argument('-i',
                     '--input',
                     type=str,
@@ -123,7 +132,7 @@ def iterate(mode, args, loader1, model, optimizer, logger, epoch, curr_step = No
 
         
         if mode in  ['test_completion']:                
-            save_path = os.path.join(args.data_folder, 'Eval_DepthModel', model_name)                
+            save_path = args.data_folder_save          
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
             SAVE_SAMPLEINTERV = 1
@@ -143,9 +152,9 @@ def iterate(mode, args, loader1, model, optimizer, logger, epoch, curr_step = No
                 zero_mtrx = np.zeros((352 - pred_h, owidth))
                 pred_dep = np.concatenate((zero_mtrx, pred_dep))
                 pred_dep_round = np.uint16(pred_dep*256)
-                filename = '%010d.png'%curr_step
-                imageio.imwrite(os.path.join(save_path, filename), pred_dep_round)
-                print('Finished writing sample %010d.png\n'%curr_step)
+                path_i = str(curr_step).zfill(6) + '.png'
+                vis_utils.save_depth_as_uint16png_upload(pred_dep_round, os.path.join(save_path, path_i))
+                print('Finished writing sample %06d.png\n'%curr_step)
             curr_step += 1                    
             avg = None
             is_best = None        
@@ -236,6 +245,8 @@ def main():
         args = checkpoint['args']
         args.data_folder = args_new.data_folder
         args.save_imageflag = args_new.save_imageflag
+        args.test = args_new.test
+        args.data_folder_save = args_new.data_folder_save
         is_eval = True
         print("Completed.")
     else:
@@ -264,7 +275,10 @@ def main():
     # Data loading code
     print("=> creating data loaders ... ")
                 
-    val_dataset = KittiDepth("val_selection", args, trainvalsplit = 0.95)    
+    if args.test:
+        val_dataset = KittiDepth("test_completion", args, trainvalsplit = 0.95)    
+    else:
+        val_dataset = KittiDepth("val_selection", args, trainvalsplit = 0.95)
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=1,
@@ -281,7 +295,7 @@ def main():
 
     if is_eval:
         print("=> starting model evaluation ...")
-        result, is_best = iterate('val_selection', args, val_loader, model, None, logger,
+        result, is_best = iterate('val_selection' if not args.test else 'test_completion', args, val_loader, model, None, logger, 
                                   checkpoint['epoch'])
         return
     # main loop
