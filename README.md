@@ -10,7 +10,7 @@ python lidar_to_depth.py
 ## 2. Prepare Data
 Link the kitti_sfd_seguv_twise folder mentioned in [SFD](https://github.com/LittlePey/SFD) to 'Data' directory. For example:
 ```
-$ ln  -s  /xxx/kitti_sfd_seguv_twise  Data/kitti_sfd_seguv_twise
+$ ln -s /xxx/kitti_sfd_seguv_twise Data/kitti_sfd_seguv_twise
 ```
 
 ## 3. Generate Dense Depth Map
