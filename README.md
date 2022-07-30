@@ -20,7 +20,7 @@ cd TWISE/Codes
 python evaluate.py --data-folder-save ../Data/kitti_sfd_seguv_twise/training/depth_dense_twise/  --test
 ```
 
-To predict dense depth map for testing set, comment line 78~86 and uncomment line 88~96 in Codes/dataloaders/kitti_loader.py, then run
+To predict dense depth map for testing set, comment line 78-86 and uncomment line 88-96 in Codes/dataloaders/kitti_loader.py, then run
 ```
 cd TWISE/Codes
 python evaluate.py --data-folder-save ../Data/kitti_sfd_seguv_twise/testing/depth_dense_twise/   --test
